@@ -1,39 +1,14 @@
 import axios from 'axios';
+import { ResponseInterface } from './zeTypes';
 
-axios.defaults.baseURL = 'http://moriahmkt.com/iotapp/';
-
-interface ResponseInterface {
-    sensores: {
-        humedad: number;
-        temperatura: number;
-        lluvia: number;
-        sol: number;
-    };
-    parcelas: ParselasResponseInterface[];
-}
-
-interface ParselasResponseInterface {
-    id: number;
-    nombre: string;
-    ubicacion: string;
-    responsable: string;
-    tipo_completo: string;
-    ultimo_riego: string;
-    sensor: {
-        humedad: number;
-        temperatura: number;
-        lluvia: number;
-        sol: number;
-    };
-    latitud: number;
-    longitud: number;
-}
+const API_URL = process.env.API_URL || 'https://moriahmkt.com/iotapp/';
+axios.defaults.baseURL = API_URL;
 
 // Fetch the data
 const fetchData = async () => {
     try {
         const response = await axios.get<ResponseInterface>('');
-        const data = response.data;
+        const data: ResponseInterface = response.data;
         console.log('Sensores:', data.sensores);
         console.log('Parcelas:', data.parcelas);
 
@@ -48,4 +23,3 @@ const fetchData = async () => {
 };
 
 export default fetchData;
-export type { ResponseInterface, ParselasResponseInterface };

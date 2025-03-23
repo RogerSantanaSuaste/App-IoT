@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ResponseInterface } from '../apiHandler';
+import { ResponseInterface } from '../zeTypes';
 
 interface IntensidadSolProps {
     data: ResponseInterface | null;

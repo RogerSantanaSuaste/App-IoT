@@ -9,6 +9,7 @@ datasource db {
 
 model parcelas {
   id               Int                @id @default(autoincrement())
+  id_parcela       Int                @unique
   nombre           String
   ubicacion        String
   responsable      String
@@ -17,7 +18,21 @@ model parcelas {
   latitud          Float
   longitud         Float
   sensores_parcela sensores_parcela[]
+  cambios_parcela  cambios_parcela[]
 }
+
+model cambios_parcela {
+  id            Int      @id @default(autoincrement())
+  parcela_id    Int
+  cambio_tipo   String
+  campo         String
+  valor_anterior String?
+  valor_nuevo    String?
+  registrado_en DateTime  @default(now())
+
+  parcelas      parcelas @relation(fields: [parcela_id], references: [id_parcela])
+}
+
 
 model sensores_parcela {
   id            Int      @id @default(autoincrement())
@@ -26,6 +41,6 @@ model sensores_parcela {
   temperatura   Float
   lluvia        Float
   sol           Float
-  registrado_en DateTime
+  registrado_en DateTime @default(now())
   parcelas      parcelas @relation(fields: [parcela_id], references: [id])
 }

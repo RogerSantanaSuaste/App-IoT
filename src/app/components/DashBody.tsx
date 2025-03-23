@@ -6,7 +6,8 @@ import Lluvia from './Lluvia';
 import Temperatura from './Temperatura';
 import Map from './Map';
 import fetchData from '../apiHandler';
-import { ResponseInterface } from '../apiHandler';
+import { ResponseInterface } from '../zeTypes';
+import { startBackgroundWorker } from '../lib/backgroundWorker';
 
 
 
@@ -18,6 +19,7 @@ const DashBody: React.FC = () => {
     useEffect(() => {
         const getData = async () => {
             try {
+                startBackgroundWorker();
                 const response = await fetchData();
                 if (response) {
                     setData(response);

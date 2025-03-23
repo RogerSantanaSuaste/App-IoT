@@ -4,6 +4,8 @@ import "./globals.css";
 import TheHeader from "./components/TheHeader";
 import TheFooter from "./components/TheFooter";
 import TheSideBar from "./components/TheSideBar";
+import 'mapbox-gl/dist/mapbox-gl.css';
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

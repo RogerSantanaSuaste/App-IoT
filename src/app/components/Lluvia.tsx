@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResponseInterface } from '../apiHandler';
+import { ResponseInterface } from '../zeTypes';
 
 interface LluviaProps {
     data: ResponseInterface | null;
