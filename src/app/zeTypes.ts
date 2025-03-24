@@ -40,6 +40,7 @@ export interface ParcelasResponseInterface {
   }
 
   export interface ParcelaDB {
+    [x: string]: any;
     id: number;
     id_parcela: number;
     nombre: string;

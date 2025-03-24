@@ -13,7 +13,7 @@ import {
     Legend
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import { getChartDataFromDB } from '../databaseHandler';
+import { getChartDataFromDB, getParcelasFromDB } from '../databaseHandler';
 
 ChartJS.register(
     CategoryScale,
@@ -41,7 +41,8 @@ const Charts: React.FC = () => {
                 setLoading(true);
                 setError(null);
 
-                const parcelaIds = [1, 2, 3, 4];
+                const parcelas = await getParcelasFromDB();
+                const parcelaIds = parcelas.map(parcela => parcela.id);
                 const chartData = await getChartDataFromDB(parcelaIds);
 
                 console.log(`✅ [CHART DATA]`, chartData);

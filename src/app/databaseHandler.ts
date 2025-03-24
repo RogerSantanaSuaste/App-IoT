@@ -104,7 +104,34 @@ const fetchAndTrackChanges = async () => {
       const existeParcela = await prisma.parcelas.findUnique({
         where: { id_parcela: parcela.id }
       });
+      // Create a new function to compare the parcelas in the API response to the parcelas in the database. If, a parcela exist in the database, but not in the API, change the "estado", which is a boolean, to false.
+      const parcelasIdsFromApi = parcelasDeApi.map(p => p.id);
+      const parcelasInDb = await prisma.parcelas.findMany({
+        where: {
+          estado: true
+        }
+      });
 
+      const parcelasToDelete = parcelasInDb.filter(p => !parcelasIdsFromApi.includes(p.id_parcela));
+
+      await Promise.all(parcelasToDelete.map(async (parcela) => {
+        await prisma.parcelas.update({
+          where: { id_parcela: parcela.id_parcela },
+          data: { estado: false }
+        });
+
+        await prisma.cambios_parcela.create({
+          data: {
+        parcela_id: parcela.id_parcela,
+        cambio_tipo: 'DELETE',
+        campo: 'estado',
+        valor_anterior: 'true',
+        valor_nuevo: 'false'
+          }
+        });
+
+        console.log(`❌ Parcela eliminada: ${parcela.nombre}`);
+      }));
       if (!existeParcela) {
         // Crear nueva parcela si no existe
         const newParcela = await prisma.parcelas.create({

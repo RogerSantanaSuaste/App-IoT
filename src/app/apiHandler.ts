@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ResponseInterface } from './zeTypes';
 
-const API_URL = process.env.API_URL || 'https://moriahmkt.com/iotapp/';
+const API_URL = process.env.API_URL || 'https://moriahmkt.com/iotapp/test/';
 axios.defaults.baseURL = API_URL;
 
 // Fetch the data

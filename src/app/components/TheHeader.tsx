@@ -11,7 +11,7 @@ const TheHeader: React.FC = () => {
             <div className="navbar bg-gray-900 shadow-sm flex justify-end">
                 <div className="avatar">
                     <div className="w-14 rounded">
-                        <Image src={user} alt="User" width={300} height={300} />
+                        <Image src={MichiruLogo} alt="User" width={300} height={300} />
                     </div>
                 </div>
                 <div>
