@@ -17,22 +17,22 @@ model parcelas {
   ultimo_riego     DateTime
   latitud          Float
   longitud         Float
+  estado           Boolean            @default(true)
   sensores_parcela sensores_parcela[]
   cambios_parcela  cambios_parcela[]
 }
 
 model cambios_parcela {
-  id            Int      @id @default(autoincrement())
-  parcela_id    Int
-  cambio_tipo   String
-  campo         String
+  id             Int      @id @default(autoincrement())
+  parcela_id     Int
+  cambio_tipo    String
+  campo          String
   valor_anterior String?
   valor_nuevo    String?
-  registrado_en DateTime  @default(now())
+  registrado_en  DateTime @default(now())
 
-  parcelas      parcelas @relation(fields: [parcela_id], references: [id_parcela])
+  parcelas parcelas @relation(fields: [parcela_id], references: [id_parcela])
 }
-
 
 model sensores_parcela {
   id            Int      @id @default(autoincrement())
@@ -42,5 +42,6 @@ model sensores_parcela {
   lluvia        Float
   sol           Float
   registrado_en DateTime @default(now())
-  parcelas      parcelas @relation(fields: [parcela_id], references: [id])
+
+  parcelas parcelas @relation(fields: [parcela_id], references: [id])
 }

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import { ParcelaDB } from "../zeTypes";
 import { getParcelasFromDB } from "../databaseHandler";
-// Esto es un desastrer, pero funciona
+
 mapboxgl.accessToken = 'pk.eyJ1Ijoicm9nZXJzYW50YW5hc3Vhc3RlIiwiYSI6ImNtODdjamtmMTBlbXAybHE5cDA2N2N0d3EifQ.A0vwTYWm4fFXzEyrPAll9Q';
 
 const Map: React.FC = () => {
@@ -12,8 +12,15 @@ const Map: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getParcelasFromDB();
-      setParcelas(data);
+      try {
+        const data = await getParcelasFromDB();
+        
+        const activeParcelas = data.filter((parcela) => parcela.estado === true);
+        
+        setParcelas(activeParcelas);
+      } catch (error) {
+        console.error('❌ [ERROR] Fetching parcelas:', error);
+      }
     };
 
     fetchData();
@@ -30,7 +37,7 @@ const Map: React.FC = () => {
     });
 
     parcelas.forEach((parcela) => {
-      const marker = new mapboxgl.Marker({ color: "red" })
+      const marker = new mapboxgl.Marker({ color: "green" })
         .setLngLat([parcela.longitud, parcela.latitud])
         .setPopup(
           new mapboxgl.Popup({ offset: 25 })
@@ -44,10 +51,10 @@ const Map: React.FC = () => {
                 box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
               ">
                 <h4 style="color: #007bff; margin: 0;">${parcela.nombre}</h4>
-                <p>Ubicación: <strong>${parcela.ubicacion}</strong></p>
-                <p>Responsable: <strong>${parcela.responsable}</strong></p>
-                <p>Tipo: <strong>${parcela.tipo_cultivo}</strong></p>
-                <p>Último Riego: <strong>${new Date(parcela.ultimo_riego).toLocaleString()}</strong></p>
+                <p>📍 Ubicación: <strong>${parcela.ubicacion}</strong></p>
+                <p>👤 Responsable: <strong>${parcela.responsable}</strong></p>
+                <p>🌱 Cultivo: <strong>${parcela.tipo_cultivo}</strong></p>
+                <p>🕒 Último Riego: <strong>${new Date(parcela.ultimo_riego).toLocaleString()}</strong></p>
               </div>
             `)
         )

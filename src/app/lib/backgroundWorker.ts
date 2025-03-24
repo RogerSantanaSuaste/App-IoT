@@ -1,6 +1,6 @@
 import fetchAndTrackChanges from "../databaseHandler";
 
-const POLLING_INTERVAL = 5 * 60 * 1000;
+const POLLING_INTERVAL = 1 * 60 * 1000;
 
 export const startBackgroundWorker = () => {
   console.log('🚀 El chambeador esta chambeando.'); // Cheks de salud porque si no, me da miedo
@@ -10,7 +10,7 @@ export const startBackgroundWorker = () => {
 
   // Ejecuta cada minuto
   setInterval(async () => {
-    console.log('🔄 Buscando cambios...');  // Cheks de salud porque si no, me da miedo
+    console.log('🔄 Buscando cambios...');
     await fetchAndTrackChanges();
   }, POLLING_INTERVAL);
 };

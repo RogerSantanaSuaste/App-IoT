@@ -16,6 +16,7 @@ export interface ParcelasResponseInterface {
     responsable: string;
     tipo_cultivo: string;
     ultimo_riego: string;
+    estado: boolean;
     sensor: {
       humedad: number;
       temperatura: number;
@@ -48,4 +49,12 @@ export interface ParcelasResponseInterface {
     ultimo_riego: string;
     latitud: number;
     longitud: number;
+    estado: boolean;
   }
+
+  export const DataType = {
+    SOL: 'sol',
+    LLUVIA: 'lluvia',
+    TEMPERATURA: 'temperatura',
+    HUMEDAD: 'humedad'
+  };
