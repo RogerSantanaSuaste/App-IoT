@@ -16,10 +16,10 @@ const TheSideBar: React.FC<TheSideBarProps> = ({ children }) => {
                     </div>
                 </div>
                 <nav className="flex-1 p-2 justify-between">
-                    <a href="/" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Dashboard</a>
+                    <a href="/dashboard" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Dashboard</a>
                     <a href="/charts" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gráficas</a>
                     <a href="/deletedParcelas" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Parcelas Eliminadas</a>
-                    <a href="#" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Salir</a>
+                    <a href="/" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Salir</a>
                 </nav>
             </div>
             <div className='flex-1'>{children}</div>

@@ -45,3 +45,12 @@ model sensores_parcela {
 
   parcelas parcelas @relation(fields: [parcela_id], references: [id])
 }
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  correo    String  @unique
+  password  String
+  nombre    String?
+  creado_en DateTime @default(now())
+  actualizado_en DateTime @updatedAt
+}

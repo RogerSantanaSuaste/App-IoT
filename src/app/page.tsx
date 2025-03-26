@@ -1,9 +1,9 @@
-import DashBody from "./components/DashBody";
+import Login from "./components/login";
 
-export default function Home() {
+export default function LoginPage() {
   return (
-    <div className="bg-gray-700">
-      <DashBody />
+    <div className="bg-gray-700 min-h-screen">
+      <Login />
     </div>
   );
 }

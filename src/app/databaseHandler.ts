@@ -1,7 +1,7 @@
 'use server';
 // Se requiere llamar a la API para registrar los datos de las parcelas dentro de la base de datos. Adicionalmente, se debe registrar los cambios de estado de las parcelas en la base de datos, solo si, existe un cambio, por obvias razones.
 // Adicionalmente, se debe tener una función que detecte cuando una parcela deja de existir, y marcarla como eliminada en la base de datos. Posteriormente, se debe de mostrar una graficación del historico de los cambios de las parcelas, al igual que un registro de las parcelas eliminadas.
-import { ResponseInterface, ParcelasResponseInterface, ParcelaDB, HistoricoInterface, DataType } from "./zeTypes";
+import { ResponseInterface, ParcelasResponseInterface, ParcelaDB } from "./zeTypes";
 import fetchData from "./apiHandler";
 import { PrismaClient } from '@prisma/client';
 
