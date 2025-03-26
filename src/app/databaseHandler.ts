@@ -98,7 +98,7 @@ const fetchAndTrackChanges = async () => {
       throw new Error('Error al recuperar los datos.');
     }
 
-    const parcelasDeApi: ParcelasResponseInterface[] = data.parcelas;
+    const parcelasDeApi: ParcelasResponseInterface[] = data?.parcelas ?? [];
 
     await Promise.all(parcelasDeApi.map(async (parcela) => {
       const existeParcela = await prisma.parcelas.findUnique({
