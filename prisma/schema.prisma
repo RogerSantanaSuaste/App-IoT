@@ -48,9 +48,11 @@ model sensores_parcela {
 
 model Usuario {
   id        Int      @id @default(autoincrement())
-  correo    String  @unique
+  correo    String   @unique
   password  String
   nombre    String?
   creado_en DateTime @default(now())
   actualizado_en DateTime @updatedAt
+  securityQuestion String
+  securityAnswer   String
 }
