@@ -21,12 +21,10 @@ const Login: React.FC = () => {
                 password
             });
 
-            if (authError) {
-                throw new Error(authError.message);
-            }
-
-            // Force a page reload to ensure middleware runs and session is detected
-            window.location.href = '/dashboard';
+            if (authError) throw authError;
+            
+            router.refresh();
+            router.push('/dashboard');
             
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido');

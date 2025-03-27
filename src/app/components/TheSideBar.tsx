@@ -1,9 +1,9 @@
 'use client'
 import React from 'react';
 import Image from 'next/image';
-import MichiruLogo from '../img/MichiruLogo.jpeg';
 import UTLOGO from '../img/UTLOGO.png';
 import { useRouter } from 'next/navigation';
+import { supabase } from '../lib/supabase';
 
 interface TheSideBarProps {
     children: React.ReactNode;
@@ -14,7 +14,8 @@ const TheSideBar: React.FC<TheSideBarProps> = ({ children }) => {
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await supabase.auth.signOut();
+            router.refresh();
             router.push('/');
         } catch (error) {
             console.error('Logout failed:', error);

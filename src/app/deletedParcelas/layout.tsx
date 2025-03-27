@@ -1,9 +1,10 @@
+// src/app/dashboard/layout.tsx
 'use client'
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 
-export default function DashboardLayout({
+export default function DeletedParcelasLayout({
   children,
 }: {
   children: React.ReactNode

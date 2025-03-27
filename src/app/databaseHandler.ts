@@ -8,83 +8,72 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Función para escuchar los cambios de la API y registrarlos en la base de datos
-const insertSensorData = async (parcelaId: number, parcela: ParcelasResponseInterface) => {
+const insertSensorData = async (parcelaApiId: number, parcelaDbId: number, parcela: ParcelasResponseInterface) => {
   try {
+    // Verificar que la parcela existe y está activa
+    const parcelaExistente = await prisma.parcelas.findUnique({
+      where: { id: parcelaDbId },
+      select: { estado: true, id_parcela: true }
+    });
+
+    if (!parcelaExistente || !parcelaExistente.estado || parcelaExistente.id_parcela !== parcelaApiId) {
+      console.log(`⚠️  Parcela con ID API ${parcelaApiId} (DB ID: ${parcelaDbId}) no existe o está inactiva, omitiendo sensores`);
+      return;
+    }
+
     const latestSensorData = await prisma.sensores_parcela.findFirst({
-      where: { parcela_id: parcelaId },
+      where: { parcela_id: parcelaApiId },
       orderBy: { registrado_en: 'desc' }
     });
 
     const { humedad, temperatura, lluvia, sol } = parcela.sensor;
-
-    const changes = [];
+    const cambios = [];
 
     if (latestSensorData) {
       if (latestSensorData.humedad !== humedad) {
-        changes.push({
-          campo: 'humedad',
-          valor_anterior: latestSensorData.humedad.toString(),
-          valor_nuevo: humedad.toString()
-        });
+        cambios.push({ campo: 'humedad', valor_anterior: latestSensorData.humedad, valor_nuevo: humedad });
       }
       if (latestSensorData.temperatura !== temperatura) {
-        changes.push({
-          campo: 'temperatura',
-          valor_anterior: latestSensorData.temperatura.toString(),
-          valor_nuevo: temperatura.toString()
-        });
+        cambios.push({ campo: 'temperatura', valor_anterior: latestSensorData.temperatura, valor_nuevo: temperatura });
       }
       if (latestSensorData.lluvia !== lluvia) {
-        changes.push({
-          campo: 'lluvia',
-          valor_anterior: latestSensorData.lluvia.toString(),
-          valor_nuevo: lluvia.toString()
-        });
+        cambios.push({ campo: 'lluvia', valor_anterior: latestSensorData.lluvia, valor_nuevo: lluvia });
       }
       if (latestSensorData.sol !== sol) {
-        changes.push({
-          campo: 'sol',
-          valor_anterior: latestSensorData.sol.toString(),
-          valor_nuevo: sol.toString()
-        });
+        cambios.push({ campo: 'sol', valor_anterior: latestSensorData.sol, valor_nuevo: sol });
       }
 
-      // Revisamos si existen cambios porque si no no hacemos nada.
-      if (changes.length > 0) {
-        await Promise.all(
-          changes.map(async (change) => {
-            await prisma.cambios_parcela.create({
+      if (cambios.length > 0) {
+        await prisma.$transaction([
+          ...cambios.map(cambio => 
+            prisma.cambios_parcela.create({
               data: {
-                parcela_id: parcelaId,
+                parcela_id: parcelaApiId,
                 cambio_tipo: 'UPDATE',
-                campo: change.campo,
-                valor_anterior: change.valor_anterior,
-                valor_nuevo: change.valor_nuevo
+                campo: cambio.campo,
+                valor_anterior: String(cambio.valor_anterior),
+                valor_nuevo: String(cambio.valor_nuevo)
               }
-            });
-            console.log(`🔄 Sensor ${change.campo} cambió en la parcela con ID: ${parcelaId}`);
-          })
-        );
-      } else {
-        console.log(`✅ No hubo cambios de sensores en la parcela con ID: ${parcelaId}`);
+            })
+          )
+        ]);
+        console.log(`🔄 Sensores actualizados para parcela ID API: ${parcelaApiId}`);
       }
     }
 
-    // Para tener el historial de sensores.
     await prisma.sensores_parcela.create({
       data: {
-        parcela_id: parcelaId,
+        parcela_id: parcelaApiId,
         humedad,
         temperatura,
         lluvia,
         sol
       }
     });
-
-    console.log(`✅ Nuevos datos de sensor insertados en parcela con ID: ${parcelaId}`);
+    console.log(`📊 Datos de sensor registrados para parcela ID API: ${parcelaApiId}`);
 
   } catch (error) {
-    console.error(`❌ Error buscando cambios en los sensores de la parcela con ID: ${parcelaId}`, error);
+    console.error(`❌ Error en insertSensorData para parcela ID API: ${parcelaApiId}`, error);
   }
 };
 
@@ -99,112 +88,121 @@ const fetchAndTrackChanges = async () => {
     }
 
     const parcelasDeApi: ParcelasResponseInterface[] = data?.parcelas ?? [];
+    const parcelasIdsFromApi = new Set(parcelasDeApi.map(p => p.id));
 
-    await Promise.all(parcelasDeApi.map(async (parcela) => {
-      const existeParcela = await prisma.parcelas.findUnique({
-        where: { id_parcela: parcela.id }
-      });
-      // Create a new function to compare the parcelas in the API response to the parcelas in the database. If, a parcela exist in the database, but not in the API, change the "estado", which is a boolean, to false.
-      const parcelasIdsFromApi = parcelasDeApi.map(p => p.id);
-      const parcelasInDb = await prisma.parcelas.findMany({
-        where: {
-          estado: true
-        }
-      });
+    // 1. Manejar parcelas eliminadas
+    const parcelasActivasEnDB = await prisma.parcelas.findMany({
+      where: { estado: true }
+    });
 
-      const parcelasToDelete = parcelasInDb.filter(p => !parcelasIdsFromApi.includes(p.id_parcela));
+    const parcelasParaDesactivar = parcelasActivasEnDB.filter(
+      p => !parcelasIdsFromApi.has(p.id_parcela)
+    );
 
-      await Promise.all(parcelasToDelete.map(async (parcela) => {
-        await prisma.parcelas.update({
-          where: { id_parcela: parcela.id_parcela },
+    await Promise.all(parcelasParaDesactivar.map(async (parcela) => {
+      await prisma.$transaction([
+        prisma.parcelas.update({
+          where: { id: parcela.id },
           data: { estado: false }
-        });
-
-        await prisma.cambios_parcela.create({
+        }),
+        prisma.cambios_parcela.create({
           data: {
-        parcela_id: parcela.id_parcela,
-        cambio_tipo: 'DELETE',
-        campo: 'estado',
-        valor_anterior: 'true',
-        valor_nuevo: 'false'
+            parcela_id: parcela.id_parcela,
+            cambio_tipo: 'DELETE',
+            campo: 'estado',
+            valor_anterior: 'true',
+            valor_nuevo: 'false'
+          }
+        })
+      ]);
+      console.log(`❌ Parcela marcada como inactiva: ${parcela.nombre} (ID API: ${parcela.id_parcela})`);
+    }));
+
+    // 2. Crear mapa de parcelas existentes por id_parcela
+    const parcelasExistentesMap = new Map(
+      parcelasActivasEnDB.map(p => [p.id_parcela, p])
+    );
+
+    // 3. Procesar parcelas de la API
+    await Promise.all(parcelasDeApi.map(async (parcelaApi) => {
+      const parcelaExistente = parcelasExistentesMap.get(parcelaApi.id);
+
+      if (!parcelaExistente) {
+        // Crear nueva parcela
+        const nuevaParcela = await prisma.parcelas.create({
+          data: {
+            id_parcela: parcelaApi.id,
+            nombre: parcelaApi.nombre,
+            ubicacion: parcelaApi.ubicacion,
+            responsable: parcelaApi.responsable,
+            tipo_cultivo: parcelaApi.tipo_cultivo,
+            ultimo_riego: new Date(parcelaApi.ultimo_riego),
+            latitud: parcelaApi.latitud,
+            longitud: parcelaApi.longitud,
+            estado: true
           }
         });
-
-        console.log(`❌ Parcela eliminada: ${parcela.nombre}`);
-      }));
-      if (!existeParcela) {
-        // Crear nueva parcela si no existe
-        const newParcela = await prisma.parcelas.create({
-          data: {
-            id_parcela: parcela.id,
-            nombre: parcela.nombre,
-            ubicacion: parcela.ubicacion,
-            responsable: parcela.responsable,
-            tipo_cultivo: parcela.tipo_cultivo,
-            ultimo_riego: new Date(parcela.ultimo_riego),
-            latitud: parcela.latitud,
-            longitud: parcela.longitud
-          }
-        });
-        console.log(`✅ Añadida nueva parcela: ${parcela.nombre}`);
-
-        // Insertar datos de sensores
-        await insertSensorData(newParcela.id, parcela);
-
+        console.log(`✅ Nueva parcela creada: ${parcelaApi.nombre} (ID API: ${parcelaApi.id})`);
+        await insertSensorData(nuevaParcela.id_parcela, nuevaParcela.id, parcelaApi);
       } else {
-        const camposARevisar: (keyof ParcelasResponseInterface)[] = [
-          'nombre', 'ubicacion', 'responsable', 'tipo_cultivo', 'ultimo_riego', 'latitud', 'longitud'
+        // Actualizar parcela existente
+        const updateData: any = {};
+        const cambios: {campo: string, anterior: any, nuevo: any}[] = [];
+
+        const camposParaVerificar: (keyof ParcelasResponseInterface)[] = [
+          'nombre', 'ubicacion', 'responsable', 'tipo_cultivo', 
+          'ultimo_riego', 'latitud', 'longitud'
         ];
 
-        let hasChanges = false;
-        const updateData: { [key: string]: any } = {};
+        camposParaVerificar.forEach(campo => {
+          const valorDB = (parcelaExistente as unknown as ParcelasResponseInterface)[campo];
+          const valorApi = campo === 'ultimo_riego' 
+            ? new Date(parcelaApi[campo])
+            : parcelaApi[campo];
 
-        await Promise.all(camposARevisar.map(async (field) => {
-          const valorAnterior = existeParcela[field as keyof typeof existeParcela]?.toString();
-          const valorNuevo = parcela[field]?.toString();
-
-          if (valorAnterior !== valorNuevo) {
-            await prisma.cambios_parcela.create({
-              data: {
-                parcela_id: parcela.id,
-                cambio_tipo: 'UPDATE',
-                campo: field,
-                valor_anterior: valorAnterior || '',
-                valor_nuevo: valorNuevo || ''
-              }
+          if (JSON.stringify(valorDB) !== JSON.stringify(valorApi)) {
+            updateData[campo] = valorApi;
+            cambios.push({
+              campo,
+              anterior: valorDB,
+              nuevo: valorApi
             });
-
-            console.log(`🔄 Actualizado ${field} en parcela: ${parcela.nombre}`);
-
-            if (field === 'ultimo_riego') {
-              updateData[field] = new Date(parcela.ultimo_riego);
-            } else {
-              updateData[field] = parcela[field];
-            }
-
-            hasChanges = true;
           }
-        }));
+        });
 
-        if (hasChanges) {
-          await prisma.parcelas.update({
-            where: { id_parcela: parcela.id },
-            data: updateData
-          });
-          console.log(`✅ Parcela actualizada: ${parcela.nombre}`);
+        if (cambios.length > 0) {
+          await prisma.$transaction([
+            prisma.parcelas.update({
+              where: { id: parcelaExistente.id },
+              data: updateData
+            }),
+            ...cambios.map(cambio => 
+              prisma.cambios_parcela.create({
+                data: {
+                  parcela_id: parcelaApi.id,
+                  cambio_tipo: 'UPDATE',
+                  campo: cambio.campo,
+                  valor_anterior: String(cambio.anterior),
+                  valor_nuevo: String(cambio.nuevo)
+                }
+              })
+            )
+          ]);
+          console.log(`🔄 Parcela actualizada: ${parcelaApi.nombre} (ID API: ${parcelaApi.id})`);
         }
 
-        // Verificar y registrar cambios en los sensores
-        await insertSensorData(existeParcela.id, parcela);
+        // Insertar datos de sensores
+        await insertSensorData(parcelaApi.id, parcelaExistente.id, parcelaApi);
       }
     }));
 
   } catch (error) {
-    console.error('❌ Error obteniendo o registrando cambios:', error);
+    console.error('❌ Error en fetchAndTrackChanges:', error);
   } finally {
     await prisma.$disconnect();
   }
 };
+
 
 // Funcion para obtener datos de las parcelas, usado en el componente de mapa.
 export const getParcelasFromDB = async (): Promise<ParcelaDB[]> => {
