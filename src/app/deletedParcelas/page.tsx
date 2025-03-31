@@ -1,4 +1,4 @@
-import DeletedParcelas from "../components/DeletedParcelas";
+import DeletedParcelas from "../views/DeletedParcelas";
 
 export default function DeletedParcelasPage() {
     return (

@@ -27,8 +27,6 @@ export interface ParcelasResponseInterface {
     longitud: number;
   }
 
-
-  
   export interface HistoricoInterface {
     id: number;
     parcela_id: number;
@@ -59,3 +57,20 @@ export interface ParcelasResponseInterface {
     TEMPERATURA: 'temperatura',
     HUMEDAD: 'humedad'
   };
+
+  export interface ChartData {
+    parcelaId: number;
+    time: Date;
+    lluvia: number;
+    temperatura: number;
+    sol: number;
+    humedad: number;
+}
+
+export interface SensorData {
+  parcelaId: number;
+  lluvia: number;
+  temperatura: number;
+  sol: number;
+  humedad: number;
+}

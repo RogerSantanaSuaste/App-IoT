@@ -3,7 +3,7 @@ import React from 'react';
 import Image from 'next/image';
 import UTLOGO from '../img/UTLOGO.png';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 interface TheSideBarProps {
     children: React.ReactNode;
@@ -30,15 +30,15 @@ const TheSideBar: React.FC<TheSideBarProps> = ({ children }) => {
                         <Image src={UTLOGO} alt="UT Logo" width={140} height={140} />
                     </div>
                 </div>
-                <nav className="flex-1 p-2 justify-between">
-                    <a href="/dashboard" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Dashboard</a>
-                    <a href="/charts" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gráficas</a>
-                    <a href="/deletedParcelas" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Parcelas Eliminadas</a>
+                <nav className="flex-1 p-2 justify-between space-y-2">
+                    <a href="/dashboard" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 bg-slate-800">📊 Dashboard</a>
+                    <a href="/charts" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 bg-slate-800">📈 Gráficas</a>
+                    <a href="/deletedParcelas" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 bg-slate-800">🗑️ Parcelas Eliminadas</a>
                     <button
                         onClick={handleLogout}
-                        className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 w-full text-left"
+                        className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 w-full text-left bg-slate-800"
                     >
-                        Salir
+                        🚪 Salir
                     </button>
                 </nav>
             </div>

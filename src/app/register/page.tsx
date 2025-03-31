@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 
 const Register: React.FC = () => {
@@ -81,7 +81,7 @@ const Register: React.FC = () => {
                         id="email"
                         type="email"
                         className="input w-full"
-                        placeholder="correo@ejemplo.com"
+                        placeholder="correo@gmail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required

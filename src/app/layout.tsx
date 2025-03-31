@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import TheHeader from "./components/TheHeader";
-import TheFooter from "./components/TheFooter";
-import TheSideBar from "./components/TheSideBar";
+import TheHeader from "./views/TheHeader";
+import TheFooter from "./views/TheFooter";
+import TheSideBar from "./views/TheSideBar";
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 

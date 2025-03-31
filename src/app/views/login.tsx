@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');

@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { ParcelaDB } from "../zeTypes";
-import { getDeletedParcelasFromDB } from '../databaseHandler';
+
 
 const DeletedParcelas: React.FC = () => {
   const [parcelas, setParcelas] = useState<ParcelaDB[]>([]);
@@ -12,7 +12,15 @@ const DeletedParcelas: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getDeletedParcelasFromDB();
+        const response = await fetch('/api/deletedParcelas');
+        const { success, data, error } = await response.json();
+        if (success) {
+          data.sort((a: ParcelaDB, b: ParcelaDB) => a.nombre.localeCompare(b.nombre));
+        }
+
+        if (!success) {
+          throw new Error(error || 'Failed to fetch parcelas eliminadas.  ');
+        }
         setParcelas(data);
         setLoading(false);
       } catch (error) {
@@ -37,8 +45,8 @@ const DeletedParcelas: React.FC = () => {
       ) : (
         <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {parcelas.map((parcela) => (
-            <div 
-              key={parcela.id} 
+            <div
+              key={parcela.id}
               className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300"
             >
               <div className="card-body">
