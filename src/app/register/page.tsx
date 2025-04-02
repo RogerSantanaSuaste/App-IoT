@@ -24,8 +24,8 @@ const Register: React.FC = () => {
             if (!validateEmail(email)) {
                 throw new Error('Por favor ingresa un correo electrónico válido');
             }
-            if (password.length < 6) {
-                throw new Error('La contraseña debe tener al menos 6 caracteres');
+            if (password.length < 8) {
+                throw new Error('La contraseña debe tener al menos 8 caracteres');
             }
 
             const { data, error: authError } = await supabase.auth.signUp({
@@ -92,11 +92,11 @@ const Register: React.FC = () => {
                         id="password"
                         type="password"
                         className="input w-full"
-                        placeholder="Mínimo 6 caracteres"
+                        placeholder="Mínimo 8 caracteres"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        minLength={6}
+                        minLength={8}
                     />
 
                     <button

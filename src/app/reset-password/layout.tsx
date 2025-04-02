@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 
-export default function DashboardLayout({
+export default function PasswordLayout({
   children,
 }: {
   children: React.ReactNode;

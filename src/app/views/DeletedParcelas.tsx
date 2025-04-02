@@ -1,70 +1,108 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import { ParcelaDB } from "../zeTypes";
+"use client"
 
+import type React from "react"
+import { useState, useEffect } from "react"
+import type { ParcelaDB } from "../zeTypes"
+import { Loader2, MapPin, User, Leaf, Clock, AlertTriangle, Hash } from "lucide-react"
 
 const DeletedParcelas: React.FC = () => {
-  const [parcelas, setParcelas] = useState<ParcelaDB[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [parcelas, setParcelas] = useState<ParcelaDB[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        const response = await fetch('/api/deletedParcelas');
-        const { success, data, error } = await response.json();
+        setLoading(true)
+        const response = await fetch("/api/deletedParcelas")
+        const { success, data, error } = await response.json()
         if (success) {
-          data.sort((a: ParcelaDB, b: ParcelaDB) => a.nombre.localeCompare(b.nombre));
+          data.sort((a: ParcelaDB, b: ParcelaDB) => a.nombre.localeCompare(b.nombre))
         }
 
         if (!success) {
-          throw new Error(error || 'Failed to fetch parcelas eliminadas.  ');
+          throw new Error(error || "Failed to fetch parcelas eliminadas.")
         }
-        setParcelas(data);
-        setLoading(false);
+        setParcelas(data)
+        setLoading(false)
       } catch (error) {
-        console.error('❌ [ERROR]', error);
-        setError('Fallo al intentar cargar las parcelas');
-        setLoading(false);
+        console.error("❌ [ERROR]", error)
+        setError("Fallo al intentar cargar las parcelas")
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
-  if (loading) return <p className="text-center text-lg">⏳ Cargando parcelas eliminadas...</p>;
-  if (error) return <p className="text-red-500 text-center">{error}</p>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Cargando parcelas eliminadas...</span>
+      </div>
+    )
+
+  if (error)
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <span className="ml-2 text-lg text-destructive">{error}</span>
+      </div>
+    )
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">🌿 Parcelas Eliminadas</h1>
+    <div className="w-full p-6">
+      <h1 className="text-2xl font-bold mb-6 text-white/90">Parcelas Eliminadas</h1>
 
       {parcelas.length === 0 ? (
-        <p className="text-gray-500 text-center">No se encontraron parcelas eliminadas.</p>
+        <div className="bg-slate-800/50 rounded-xl p-8 text-center w-full">
+          <p className="text-gray-400 text-lg">No se encontraron parcelas eliminadas.</p>
+        </div>
       ) : (
-        <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full">
           {parcelas.map((parcela) => (
             <div
               key={parcela.id}
-              className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300"
+              className="bg-slate-900/80 border border-slate-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
             >
-              <div className="card-body">
-                <h2 className="card-title">{parcela.nombre}</h2>
-                <p className="text-slate-200">📍 {parcela.ubicacion}</p>
-                <p className="text-slate-300">👤 {parcela.responsable}</p>
-                <p className="text-slate-300">🌱 {parcela.tipo_cultivo}</p>
-                <p className="text-slate-300 text-sm">
-                  🕒 Último riego: {new Date(parcela.ultimo_riego).toLocaleString()}
-                </p>
-                <div className="badge badge-error mt-4">[DELETED]</div>
+              <div className="p-5">
+                <h2 className="text-xl font-semibold mb-3">{parcela.nombre}</h2>
+                <div className="space-y-2 text-slate-300">
+                <div className="flex items-center">
+                    <Hash className="h-4 w-4 mr-2 text-slate-400" />
+                    <p>{parcela.id}</p>
+                  </div>
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-2 text-slate-400" />
+                    <p>{parcela.ubicacion}</p>
+                  </div>
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-2 text-slate-400" />
+                    <p>{parcela.responsable}</p>
+                  </div>
+                  <div className="flex items-center">
+                    <Leaf className="h-4 w-4 mr-2 text-slate-400" />
+                    <p>{parcela.tipo_cultivo}</p>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2 text-slate-400" />
+                    <p className="text-sm">Último riego: {new Date(parcela.ultimo_riego).toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-300 border border-red-800">
+                    ELIMINADA
+                  </span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default DeletedParcelas;
+export default DeletedParcelas
+

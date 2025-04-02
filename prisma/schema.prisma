@@ -43,7 +43,7 @@ model sensores_parcela {
   sol           Float
   registrado_en DateTime @default(now())
 
-  parcelas parcelas @relation(fields: [parcela_id], references: [id])
+  parcelas parcelas @relation(fields: [parcela_id], references: [id_parcela])
 }
 
 model Usuario {

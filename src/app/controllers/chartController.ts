@@ -39,7 +39,7 @@ export class ChartController {
         try {
             const data = await this.chartService.getAllChartData();
             
-            console.log('Data from ChartService:', data);  // Add this to debug the returned data
+            console.log('Data from ChartService:', data);
     
             return {
                 success: true,

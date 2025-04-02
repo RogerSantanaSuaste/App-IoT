@@ -1,75 +1,84 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import Humedad from './Humedad';
-import IntensidadSol from './IntensidadSol';
-import Lluvia from './Lluvia';
-import Temperatura from './Temperatura';
-import Map from './Map';
-import fetchData from '../apiHandler';
-import { ResponseInterface } from '../zeTypes';
+"use client"
 
-
+import type React from "react"
+import { useState, useEffect } from "react"
+import Humedad from "./Humedad"
+import IntensidadSol from "./IntensidadSol"
+import Lluvia from "./Lluvia"
+import Temperatura from "./Temperatura"
+import Map from "./Map"
+import fetchData from "../apiHandler"
+import type { ResponseInterface } from "../zeTypes"
+import { Loader2 } from "lucide-react"
 
 const DashBody: React.FC = () => {
-    const [data, setData] = useState<ResponseInterface | null>(null);
-    const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<ResponseInterface | null>(null)
+  const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const startWorker = async () => {
+          await fetch("/api/backgroundWorker")
+        }
 
-    useEffect(() => {
-        const getData = async () => {
-            try {
-                const startWorker = async () => {
-                    await fetch('/api/backgroundWorker');
-                  };
-              
-                  startWorker();
-              
-                const response = await fetchData();
-                if (response) {
-                    setData(response);
-                }
-            }catch (error) {
-                console.error('Error:', error);
-            }finally{
-                setLoading(false);
-            }
-        };
-        getData();
-    }, []);
-    return (
-        <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                <div className="card bg-slate-900 shadow-xl md:col-span-1 lg:col-span-2">
-                    <div className="card-body">
-                        <h2 className="card-title">Mapa</h2>
-                        <Map />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="card bg-slate-900 shadow-xl">
-                        <div className="card-body">
-                            <Temperatura data={data} />
-                        </div>
-                    </div>
-                    <div className="card bg-slate-900 shadow-xl">
-                        <div className="card-body">
-                            <Humedad data={data} />
-                        </div>
-                    </div>
-                    <div className="card bg-slate-900 shadow-xl">
-                        <div className="card-body">
-                            <IntensidadSol data={data} />
-                        </div>
-                    </div>
-                    <div className="card bg-slate-900 shadow-xl">
-                        <div className="card-body">
-                            <Lluvia data={data} />
-                        </div>
-                    </div>
-                </div>
+        await startWorker()
+
+        const response = await fetchData()
+        if (response) {
+          setData(response)
+        }
+      } catch (error) {
+        console.error("Error:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getData()
+
+    const POLLING_INTERVAL = 1 * 60 * 1000
+
+    const interval = setInterval(() => {
+      console.log("Refreshing data...")
+      setLoading(true)
+      getData()
+    }, POLLING_INTERVAL)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6 text-white/90">Panel de Control</h1>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 rounded-xl overflow-hidden border border-slate-800 bg-slate-900/80 shadow-xl">
+            <div className="p-4 border-b border-slate-800">
+              <h2 className="text-xl font-medium">Mapa de Parcelas</h2>
             </div>
-        </>
-    )
+            <Map />
+          </div>
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Temperatura data={data} />
+              <Humedad data={data} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <IntensidadSol data={data} />
+              <Lluvia data={data} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
-export default DashBody;
+export default DashBody

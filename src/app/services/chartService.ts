@@ -12,13 +12,38 @@ export class ChartService {
         parcelas: any[],
         chartData: ChartData[]
     }> {
+        // 1. Get all parcelas
         const parcelas = await this.parcelaModel.findAllParcelas();
-        console.log('Parcelas:', parcelas);
-        const parcelaIds = parcelas.map(p => p.id);
-        console.log('Parcelas IDs:', parcelaIds);
-        const chartData = await this.getChartData(parcelaIds);
-
-        return { parcelas, chartData };
+        const parcelaIds = parcelas.map(p => p.id_parcela);
+    
+        // 2. Get raw chart data (without relying on DB filtering)
+        const rawChartData = await this.getChartData(parcelaIds);
+    
+        // 3. Calculate time boundaries (UTC)
+        const now = new Date();
+        const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+    
+        // 4. Strict client-side filtering
+        const filteredChartData = rawChartData.filter(item => {
+            const recordDate = new Date(item.time);
+            return recordDate >= twelveHoursAgo && recordDate <= now;
+        });
+    
+        // 5. Debug logs
+        console.log(`[Filter] Current UTC: ${now.toISOString()}`);
+        console.log(`[Filter] 12 hours ago: ${twelveHoursAgo.toISOString()}`);
+        console.log(`[Filter] Raw records: ${rawChartData.length}`);
+        console.log(`[Filter] Filtered records: ${filteredChartData.length}`);
+        
+        if (filteredChartData.length === 0 && rawChartData.length > 0) {
+            console.warn('[WARNING] No recent data found, but old data exists. Latest record:', 
+                new Date(rawChartData[rawChartData.length-1].time).toISOString());
+        }
+    
+        return { 
+            parcelas, 
+            chartData: filteredChartData  // Only return filtered data
+        };
     }
 
     async getChartDataForActiveParcelas(): Promise<ParcelasResponseInterface[]> {

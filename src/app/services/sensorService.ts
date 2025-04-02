@@ -4,12 +4,11 @@ import { ParcelasResponseInterface } from "../zeTypes";
 export class SensorService {
     private model = new sensorModel();
 
-    async insertSensorData(parcelaApiId: number, parcelaDbId: number, parcela: ParcelasResponseInterface) {
+    async insertSensorData(parcelaApiId: number, parcela: ParcelasResponseInterface) {
         try {
-            const existe = await this.model.checarSiExisteParcela(parcelaDbId, parcelaApiId);
+            const existe = await this.model.checarSiExisteParcela(parcelaApiId);
             if (!existe) {
-                // No existe :c
-                console.log(`⚠️  Parcela con ID API ${parcelaApiId} (DB ID: ${parcelaDbId}) no existe o está inactiva, omitiendo sensores`);
+                console.log(`⚠️ Parcela con ID API ${parcelaApiId} no existe o está inactiva, omitiendo sensores`);
                 return;
             }
 
@@ -17,7 +16,7 @@ export class SensorService {
             const { humedad, temperatura, lluvia, sol } = parcela.sensor;
             const cambios = [];
 
-            // Detectar cambios.
+            // Detectar cambios
             if (latestSensorData) {
                 if (latestSensorData.humedad !== humedad) {
                     cambios.push({ campo: 'humedad', valorAnterior: latestSensorData.humedad, valorNuevo: humedad });

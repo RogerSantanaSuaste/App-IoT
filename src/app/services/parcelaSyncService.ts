@@ -1,4 +1,3 @@
-// /services/parcelaSyncService.ts
 import { ParcelaModel } from '../models/parcelaModel';
 import { SensorService } from './sensorService';
 import { ResponseInterface, ParcelasResponseInterface } from '../zeTypes';
@@ -13,6 +12,7 @@ export class ParcelaSyncService {
 
     // Handlers para procesos
     await this.handleDeletedParcelas(parcelasIdsFromApi);
+    await this.handleRestoredParcelas(parcelasIdsFromApi);
 
     await this.processApiParcelas(parcelasDeApi);
   }
@@ -24,8 +24,20 @@ export class ParcelaSyncService {
     );
 
     await Promise.all(parcelasToDeactivate.map(async (parcela) => {
-      await this.parcelaModel.deactivateParcela(parcela.id, parcela.id_parcela);
+      await this.parcelaModel.deactivateParcela(parcela.id_parcela);
       console.log(`❌ Parcela marcada como inactiva: ${parcela.nombre} (ID API: ${parcela.id_parcela})`);
+    }));
+  }
+
+  private async handleRestoredParcelas(apiParcelaIds: Set<number>) {
+    const inactiveParcelas = await this.parcelaModel.findDeletedParcelas();
+    const parcelasToRestore = inactiveParcelas.filter(
+      p => apiParcelaIds.has(p.id_parcela)
+    );
+
+    await Promise.all(parcelasToRestore.map(async (parcela) => {
+      await this.parcelaModel.restoreParcela(parcela.id_parcela);
+      console.log(`✅ Parcela restaurada: ${parcela.nombre} (ID API: ${parcela.id_parcela})`);
     }));
   }
 
@@ -64,9 +76,8 @@ export class ParcelaSyncService {
     });
   
     console.log(`✅ Nueva parcela creada: ${parcelaApi.nombre} (ID API: ${parcelaApi.id})`);
-    await this.sensorService.insertSensorData(nuevaParcela.id_parcela, nuevaParcela.id, parcelaApi);
+    await this.sensorService.insertSensorData(parcelaApi.id, parcelaApi);
   }
-  
 
   private async updateExistingParcela(
     existingParcela: any, 
@@ -99,11 +110,11 @@ export class ParcelaSyncService {
     });
 
     if (changes.length > 0) {
-      await this.parcelaModel.updateParcela(existingParcela.id, updateData, changes);
+      await this.parcelaModel.updateParcela(parcelaApi.id, updateData, changes);
       console.log(`🔄 Parcela actualizada: ${parcelaApi.nombre} (ID API: ${parcelaApi.id})`);
     }
 
-    await this.sensorService.insertSensorData(parcelaApi.id, existingParcela.id, parcelaApi);
+    await this.sensorService.insertSensorData(parcelaApi.id, parcelaApi);
   }
 
   async cleanup() {

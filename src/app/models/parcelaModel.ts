@@ -1,9 +1,9 @@
 import prisma from "@/lib/prisma";
 import { ParcelaDB, ChartData } from "../zeTypes";
 
-
 export class ParcelaModel {
     private db = prisma;
+    
     async findActiveParcelas(): Promise<ParcelaDB[]> {
         const parcelas = await this.db.parcelas.findMany({
             where: { estado: true },
@@ -20,18 +20,16 @@ export class ParcelaModel {
         const parcelas = await this.db.parcelas.findMany({
             include: { sensores_parcela: true }
         });
-        console.log('All Parcelas:', parcelas);
         return parcelas.map(parcela => ({
             ...parcela,
             ultimo_riego: parcela.ultimo_riego.toISOString()
         }));
     }
 
-
     async findDeletedParcelas(): Promise<ParcelaDB[]> {
         const parcelas = await this.db.parcelas.findMany({
             where: { estado: false },
-            orderBy: { id: 'asc' }
+            orderBy: { id_parcela: 'asc' }
         });
 
         return parcelas.map(parcela => ({
@@ -48,12 +46,18 @@ export class ParcelaModel {
 
     async getChartData(parcelaIds: number[]): Promise<ChartData[]> {
         try {
+            const twelveHoursAgo = new Date();
+            twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12); // Subtract 12 hours
+    
             const result = await this.db.sensores_parcela.findMany({
-                where: { parcela_id: { in: parcelaIds } },
+                where: { 
+                    parcela_id: { in: parcelaIds },
+                    registrado_en: { gte: twelveHoursAgo }
+                },
                 orderBy: { registrado_en: 'asc' }
             });
-
-            return result.map((item: { parcela_id: number; registrado_en: Date; lluvia: number; temperatura: number; sol: number; humedad: number }) => ({
+    
+            return result.map((item) => ({
                 parcelaId: item.parcela_id,
                 time: item.registrado_en,
                 lluvia: item.lluvia,
@@ -67,10 +71,10 @@ export class ParcelaModel {
         }
     }
 
-    async deactivateParcela(parcelaId: number, parcelaApiId: number) {
+    async deactivateParcela(parcelaApiId: number) {
         await this.db.$transaction([
             this.db.parcelas.update({
-                where: { id: parcelaId },
+                where: { id_parcela: parcelaApiId },
                 data: { estado: false }
             }),
             this.db.cambios_parcela.create({
@@ -103,7 +107,25 @@ export class ParcelaModel {
         });
     }
 
-    async updateParcela(parcelaId: number, updateData: any, changes: {
+    async restoreParcela(parcelaApiId: number) {
+        await this.db.$transaction([
+            this.db.parcelas.update({
+                where: { id_parcela: parcelaApiId },
+                data: { estado: true }
+            }),
+            this.db.cambios_parcela.create({
+                data: {
+                    parcela_id: parcelaApiId,
+                    cambio_tipo: 'RESTORE',
+                    campo: 'estado',
+                    valor_anterior: 'false',
+                    valor_nuevo: 'true'
+                }
+            })
+        ]);
+    }
+    
+    async updateParcela(parcelaApiId: number, updateData: any, changes: {
         parcela_id: number;
         cambio_tipo: string;
         campo: string;
@@ -114,7 +136,7 @@ export class ParcelaModel {
 
         await this.db.$transaction([
             this.db.parcelas.update({
-                where: { id: parcelaId },
+                where: { id_parcela: parcelaApiId },
                 data: updateData
             }),
             ...changes.map(change =>
@@ -128,5 +150,4 @@ export class ParcelaModel {
     async disconnect() {
         await this.db.$disconnect();
     }
-
 }
